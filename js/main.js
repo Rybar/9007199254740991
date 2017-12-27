@@ -1,4 +1,8 @@
 (()=>{
+  var stats = new Stats();
+  stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+  document.body.appendChild( stats.dom );
+
   var t = 0, last = 0, now = 0,
 
   playerX = WIDTH/2, playerY = HEIGHT/2,
@@ -17,15 +21,26 @@ load=()=>{
 
 init=()=>{
   //state vars, initial game state
-  let i = 50000;
+  let i = 40000;
   while(--i){
+    blocks.push(
+      Math.random()*worldWidth|0, //x
+      Math.random()*worldHeight|0, //y
+      0, //WIDTH or Radius
+      0, //HEIGHT
+      22, //color
+      3, //type 0:block, 1:circle, 2: filledCircle, 3:dot
+    )
+  }
+  let j = 50000;
+  while(--j){
     blocks.push(
       Math.random()*worldWidth|0, //x
       Math.random()*worldHeight|0, //y
       Math.random()*10+5|0, //WIDTH or Radius
       Math.random()*10+5|0, //HEIGHT
       Math.random()*64|0, //color
-      Math.random()*4|0, //type 0:block, 1:circle, 2: filledCircle, 3:dot
+      Math.random()*3|0, //type 0:block, 1:circle, 2: filledCircle, 3:dot
     )
   }
   console.log(blocks)
@@ -33,15 +48,15 @@ init=()=>{
 }
 
 loop=()=>{
-    // last = now;
-    // now = new Date().getTime();
-    // dt = Math.min(1, (now - last) / 1000);
-    t++;
+  stats.begin();
+  t++;
 
-    step(t);
-    draw(t);
+  step(t);
+  draw(t);
 
   render(t);
+
+  stats.end();
   requestAnimationFrame(loop);
 
 }
@@ -72,10 +87,15 @@ draw=(dt)=>{
       h = blocks[i+3],
       type = blocks[i+5],
       p = 100;
+
      if(x > 0-p && x < WIDTH+p && y > 0-p && y < HEIGHT+p){
        switch(type){
          case 0:
-         fillRect(x, y, wr, h, c);
+         let i = 5;
+         while(i--){
+           fillCircle(x+Math.random()*6-3,y+Math.random()*6-3, wr, c);
+         }
+         //fillRect(x, y, wr, h, c);
          break;
          case 1:
          circle(x,y, wr, c);
