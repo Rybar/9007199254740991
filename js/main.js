@@ -79,35 +79,7 @@ else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN))  { playerY++; viewY++;}
 draw=(dt)=>{
  clear(30);
  //let i = blocks.length;
- for(let i = 0; i < blocks.length; i+=6){
-     let x = blocks[i]-viewX,
-      y = blocks[i+1]-viewY,
-      c = blocks[i+4],
-      wr = blocks[i+2],
-      h = blocks[i+3],
-      type = blocks[i+5],
-      p = 100;
-
-     if(x > 0-p && x < WIDTH+p && y > 0-p && y < HEIGHT+p){
-       switch(type){
-         case 0:
-         let i = 5;
-         while(i--){
-           fillCircle(x+Math.random()*6-3,y+Math.random()*6-3, wr, c);
-         }
-         //fillRect(x, y, wr, h, c);
-         break;
-         case 1:
-         circle(x,y, wr, c);
-         break;
-         case 2:
-         fillCircle(x,y, wr, c);
-         case 3:
-         pset(x, y, c);
-         break;
-       }
-     }
-   }
+ ellipse(20,20,60,25,4);
  fillRect(playerX-viewX, playerY-viewY, 8, 8, 4);
 
 }
@@ -126,5 +98,39 @@ window.addEventListener('focus', function (event) {
 }, false);
 
 load();
+
+drawThings=()=>{
+
+  for(let i = 0; i < blocks.length; i+=6){
+      let x = blocks[i]-viewX,
+       y = blocks[i+1]-viewY,
+       c = blocks[i+4],
+       wr = blocks[i+2],
+       h = blocks[i+3],
+       type = blocks[i+5],
+       p = 100;
+
+      if(x > 0-p && x < WIDTH+p && y > 0-p && y < HEIGHT+p){
+        switch(type){
+          case 0:
+          let i = 5;
+          while(i--){
+            fillCircle(x+Math.random()*6-3,y+Math.random()*6-3, wr, c);
+          }
+          //fillRect(x, y, wr, h, c);
+          break;
+          case 1:
+          circle(x,y, wr, c);
+          break;
+          case 2:
+          fillCircle(x,y, wr, c);
+          case 3:
+          pset(x, y, c);
+          break;
+        }
+      }
+    }
+
+}
 
 })();
