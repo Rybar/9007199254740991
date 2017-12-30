@@ -6,12 +6,14 @@
   var t = 0, last = 0, now = 0,
 
 
-  worldWidth = 10000; worldHeight = 10000;
+  worldWidth = 10000, worldHeight = 10000,
 
   playerX = worldWidth-WIDTH/2, playerY = worldHeight/2,
 
-  viewX = playerX - WIDTH/2; viewY = playerY - HEIGHT/2;
-  blocks = [];
+  viewX = playerX - WIDTH/2, viewY = playerY - HEIGHT/2,
+  blocks = [],
+
+  gp = {},
 
 
 
@@ -24,13 +26,14 @@ load=()=>{
 init=()=>{
   //state vars, initial game state
   let i = 60000;
+  starColors = [17,18,19,20,21,22];
   while(--i){
     blocks.push(
       Math.random()*worldWidth|0, //x
       Math.random()*worldHeight|0, //y
       0, //WIDTH or Radius
       0, //HEIGHT
-      22, //color
+      starColors[Math.random*6|0], //color
       3, //type 0:block, 1:circle, 2: filledCircle, 3:dot
     )
   }
@@ -78,7 +81,7 @@ drawThings=(dt)=>{
           circle(x,y, wr, c);
           break;
           case 2:
-          fillCircle(x,y, wr, c);
+          fillCircle(x*1.1,y*1.1, wr, c);
           case 3:
           pset(x, y, c);
           break;
@@ -109,8 +112,16 @@ drawMiniMap=(dt)=>{
     pset(x+playerX*scalar, y+playerY*scalar, 4);
 
 }
+function buttonPressed(b) {
+  if (typeof(b) == "object") {
+    return b.pressed;
+  }
+  return b == 1.0;
+}
 loop=()=>{
   stats.begin();
+  var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+  gp = gamepads[0];
   t++;
 
   step(t);
@@ -124,11 +135,24 @@ loop=()=>{
 }
 
 step=(dt)=>{
-
+  //keyboard input
   if(Key.isDown(Key.d) || Key.isDown(Key.RIGHT)) playerX++;
   else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) playerX--;
   if(Key.isDown(Key.w)|| Key.isDown(Key.UP)) playerY--;
   else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN)) playerY++;
+  
+  //gamepad input
+  if(gp){
+    if(buttonPressed(gp.buttons[3]) ) playerX++;
+    else if(buttonPressed(gp.buttons[2]) ) playerX--;
+    if(buttonPressed(gp.buttons[0]) ) playerY--;
+    else if(buttonPressed(gp.buttons[1]) ) playerY++;
+
+    if(Math.abs(gp.axes[0]) > .1)playerX+= 5 * gp.axes[0]; //allow for deadzone
+    if(Math.abs(gp.axes[1]) > .1)playerY+= 5 * gp.axes[1];
+  }
+
+
 
   if(playerX < 0)playerX = worldWidth;
   if(playerY < 0)playerY = worldHeight;
@@ -140,8 +164,6 @@ step=(dt)=>{
 
 draw=(dt)=>{
  clear(30);
- //let i = blocks.length;
- //ellipse(20,20,60,25,4);
  drawThings();
  fillRect(playerX-viewX, playerY-viewY, 8, 8, 4);
  drawMiniMap();
@@ -159,6 +181,11 @@ window.addEventListener('blur', function (event) {
 window.addEventListener('focus', function (event) {
   paused = false;
 }, false);
+window.addEventListener("gamepadconnected", function(e) {
+  console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+    e.gamepad.index, e.gamepad.id,
+    e.gamepad.buttons.length, e.gamepad.axes.length);
+});
 
 load();
 
