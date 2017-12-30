@@ -8,7 +8,7 @@
 
   worldWidth = 10000; worldHeight = 10000;
 
-  playerX = worldWidth/2, playerY = worldHeight/2,
+  playerX = worldWidth-WIDTH/2, playerY = worldHeight/2,
 
   viewX = playerX - WIDTH/2; viewY = playerY - HEIGHT/2;
   blocks = [];
@@ -60,6 +60,11 @@ drawThings=(dt)=>{
        type = blocks[i+5],
        p = 60; //overscan check to prevent popping and too much overdraw
 
+       if(x+playerX < worldWidth + WIDTH/2 && x < 0-p)x += worldWidth;
+       if(x-playerX > WIDTH/2 && x > WIDTH+p)x -= worldWidth;
+       if(y+playerY < worldHeight + HEIGHT/2 && y < 0-p)y += worldHeight;
+       if(y-playerY > HEIGHT/2 && y > HEIGHT+p)y -= worldHeight;
+
       if(x > 0-p && x < WIDTH+p && y > 0-p && y < HEIGHT+p){
         switch(type){
           case 0:
@@ -98,7 +103,7 @@ drawMiniMap=(dt)=>{
        p = 100;
 
       if(type == 2 && wr > 23){
-          pset(x + ex,y + ey,c)
+          pset(x + ex,y + ey,30)
       }
     }
     pset(x+playerX*scalar, y+playerY*scalar, 4);
@@ -119,17 +124,18 @@ loop=()=>{
 }
 
 step=(dt)=>{
-  if(t%5<1){
-    // for(let i = 0; i < blocks.length; i+=6){
-    //     blocks[i] += Math.random()-.5;
-    //     blocks[i+1]+= Math.random()-.5;
-    // }
-  }
 
-  if(Key.isDown(Key.d) || Key.isDown(Key.RIGHT))       { playerX++; viewX++}
-  else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) { playerX--; viewX--;}
-  if(Key.isDown(Key.w)|| Key.isDown(Key.UP))      { playerY--; viewY--;}
-  else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN))  { playerY++; viewY++;}
+  if(Key.isDown(Key.d) || Key.isDown(Key.RIGHT)) playerX++;
+  else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) playerX--;
+  if(Key.isDown(Key.w)|| Key.isDown(Key.UP)) playerY--;
+  else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN)) playerY++;
+
+  if(playerX < 0)playerX = worldWidth;
+  if(playerY < 0)playerY = worldHeight;
+  if(playerX > worldWidth)playerX = 0;
+  if(playerY > worldHeight)playerY = 0;
+
+  viewX = playerX - WIDTH/2; viewY = playerY - HEIGHT/2;
 }
 
 draw=(dt)=>{
