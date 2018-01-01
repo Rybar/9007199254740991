@@ -5,14 +5,14 @@
 
   var t = 0, last = 0, now = 0,
 
-  chunkWidth = 512, chunkHeight = 512, //actually radius or half of chunk
+  chunkWidth = 128, chunkHeight = 128, //actually radius or half of chunk
 
   //worldWidth = Math.pow(2^54)
 
   playerX = 0, playerY = 0,
 
   viewX = playerX - WIDTH/2, viewY = playerY - HEIGHT/2,
-  blocks = [], lcg = new LCG(), starColors,
+  blocks = [], lcg = new LCG(), starColors, currentChunk, moved,
 
   gp = {},
 
@@ -26,16 +26,18 @@ load=()=>{
 
 init=()=>{
   chunkCoords = [0,0];
-  lcg.setSeed(3141592653);
+  currentChunk = [0,0];
+  moved = 0;
+  lcg.setSeed(chunkCoords[0] * 314159 + chunkCoords[1] * 314159);
   starColors = [17,18,19,20,21,22];
   generateChunk(chunkCoords);
-  console.log(blocks)
   loop();
 }
 
 generateChunk=(coords)=>{
+  lcg.setSeed(coords[0] * 314159 + coords[1] * 314159);
 
-  let i = 6000,
+  let i = 100,
   x = coords[0] * chunkWidth,
   left = x-chunkWidth,
   right = x+chunkWidth,
@@ -53,17 +55,18 @@ generateChunk=(coords)=>{
       3, //type 0:block, 1:circle, 2: filledCircle, 3:dot
     )
   }
-  let j = 100;
+  let j = 20;
   while(--j){
     blocks.push(
       lcg.nextIntRange(left,right), //x
       lcg.nextIntRange(top,bottom), //y
-      lcg.nextIntRange(5,25), //WIDTH or Radius
+      lcg.nextIntRange(5,10), //WIDTH or Radius
       lcg.nextIntRange(5,10), //HEIGHT
       lcg.nextIntRange(0,63), //color
       lcg.nextIntRange(0,2), //type 0:block, 1:circle, 2: filledCircle, 3:dot
     )
   }
+  console.log(blocks.length);
 }
 
 drawThings=(dt)=>{
@@ -180,11 +183,25 @@ step=(dt)=>{
   top = y - chunkWidth,
   bottom = y + chunkWidth;
 
-  if(viewX < left) generateChunk([ chunkCoords[0]--, chunkCoords[1] ]);
-  if(viewX + WIDTH > right) generateChunk([ chunkCoords[0]++, chunkCoords[1] ]);
-  if(viewY < top) generateChunk([ chunkCoords[0]--, chunkCoords[1] ]);
-  if(viewY + HEIGHT > bottom) generateChunk([ chunkCoords[0]++, chunkCoords[1] ]);
+  // if(viewX < left) generateChunk([ chunkCoords[0]-1, chunkCoords[1] ]);
+  // if(viewX + WIDTH > right) generateChunk([ chunkCoords[0]+1, chunkCoords[1] ]);
+  // if(viewY < top) generateChunk([ chunkCoords[0], chunkCoords[1]+1 ]);
+  // if(viewY + HEIGHT > bottom) generateChunk([ chunkCoords[0], chunkCoords[1]-1 ]);
 
+  // if(playerX < left)chunkCoords[0]--;
+  // if(playerX > right)chunkCoords[0]++;
+  // if(playerY < top)chunkCoords[1]--;
+  // if(playerY > bottom)chunkCoords[1]++;
+  chunkCoords[0] = playerX / (chunkWidth) | 0;
+  chunkCoords[1] = playerY / (chunkWidth) | 0;
+
+  if(chunkCoords[0] != currentChunk[0] || chunkCoords[0] != currentChunk[0]){
+    //moved++;
+    currentChunk[0] = chunkCoords[0];
+    currentChunk[1] = chunkCoords[1];
+    generateChunk(chunkCoords);
+  }
+  console.log(chunkCoords[0], chunkCoords[1], playerX, playerY, currentChunk[0], currentChunk[1], moved);
 
 
 
@@ -194,7 +211,9 @@ step=(dt)=>{
   // if(playerY > worldHeight)playerY = 0;
 
   viewX = playerX - WIDTH/2; viewY = playerY - HEIGHT/2;
+
 }
+
 
 draw=(dt)=>{
  clear(30);
