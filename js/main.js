@@ -5,15 +5,14 @@
 
   var t = 0, last = 0, now = 0,
 
-
-  chunkWidth = 1024, chunkHeight = 1024,
+  chunkWidth = 512, chunkHeight = 512, //actually radius or half of chunk
 
   //worldWidth = Math.pow(2^54)
 
   playerX = 0, playerY = 0,
 
   viewX = playerX - WIDTH/2, viewY = playerY - HEIGHT/2,
-  blocks = [], lcg = new LCG(),
+  blocks = [], lcg = new LCG(), starColors,
 
   gp = {},
 
@@ -26,34 +25,45 @@ load=()=>{
 }
 
 init=()=>{
-  //state vars, initial game state
-  chunkCoordinates = [0,0];
-  lcg.setSeed(3141592653)
-  let i = 6000;
+  chunkCoords = [0,0];
+  lcg.setSeed(3141592653);
   starColors = [17,18,19,20,21,22];
+  generateChunk(chunkCoords);
+  console.log(blocks)
+  loop();
+}
+
+generateChunk=(coords)=>{
+
+  let i = 6000,
+  x = coords[0] * chunkWidth,
+  left = x-chunkWidth,
+  right = x+chunkWidth,
+  y = coords[1] * chunkWidth,
+  top = y - chunkWidth,
+  bottom = y + chunkWidth;
+
   while(--i){
     blocks.push(
-      lcg.nextIntRange(-chunkWidth, chunkWidth), //x
-      lcg.nextIntRange(-chunkWidth, chunkWidth), //y
+      lcg.nextIntRange(left, right), //x
+      lcg.nextIntRange(top, bottom), //y
       0, //WIDTH or Radius
       0, //HEIGHT
       starColors[lcg.nextIntRange(0,5)], //color
       3, //type 0:block, 1:circle, 2: filledCircle, 3:dot
     )
   }
-  let j = 1000;
+  let j = 100;
   while(--j){
     blocks.push(
-      lcg.nextIntRange(-chunkWidth, chunkWidth), //x
-      lcg.nextIntRange(-chunkWidth, chunkWidth), //y
+      lcg.nextIntRange(left,right), //x
+      lcg.nextIntRange(top,bottom), //y
       lcg.nextIntRange(5,25), //WIDTH or Radius
       lcg.nextIntRange(5,10), //HEIGHT
       lcg.nextIntRange(0,63), //color
       lcg.nextIntRange(0,2), //type 0:block, 1:circle, 2: filledCircle, 3:dot
     )
   }
-  console.log(blocks)
-  loop();
 }
 
 drawThings=(dt)=>{
@@ -67,7 +77,7 @@ drawThings=(dt)=>{
        type = blocks[i+5],
        p = 60; //overscan check to prevent popping and too much overdraw
 
-       //now we need to generate new chunks at the edges insteda
+       //now we need to generate new chunks at the edges instead of wrapping
 
        // if(x+playerX < worldWidth + WIDTH/2 && x < 0-p)x += worldWidth;
        // if(x-playerX > WIDTH/2 && x > WIDTH+p)x -= worldWidth;
@@ -162,6 +172,19 @@ step=(dt)=>{
     if(Math.abs(gp.axes[0]) > .1)playerX+= 5 * gp.axes[0]; //allow for deadzone
     if(Math.abs(gp.axes[1]) > .1)playerY+= 5 * gp.axes[1];
   }
+
+  let x = chunkCoords[0] * chunkWidth,
+  left = x-chunkWidth,
+  right = x+chunkWidth,
+  y = chunkCoords[1] * chunkWidth,
+  top = y - chunkWidth,
+  bottom = y + chunkWidth;
+
+  if(viewX < left) generateChunk([ chunkCoords[0]--, chunkCoords[1] ]);
+  if(viewX + WIDTH > right) generateChunk([ chunkCoords[0]++, chunkCoords[1] ]);
+  if(viewY < top) generateChunk([ chunkCoords[0]--, chunkCoords[1] ]);
+  if(viewY + HEIGHT > bottom) generateChunk([ chunkCoords[0]++, chunkCoords[1] ]);
+
 
 
 
