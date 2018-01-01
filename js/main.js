@@ -40,10 +40,11 @@ generateChunk=(coords)=>{
   let i = 100,
   x = coords[0] * chunkWidth,
   left = x-chunkWidth,
-  right = x+chunkWidth,
+  right = left+chunkWidth*2,
   y = coords[1] * chunkWidth,
   top = y - chunkWidth,
-  bottom = y + chunkWidth;
+  bottom = top + chunkWidth*2;
+  console.log(left,right,top,bottom);
 
   while(--i){
     blocks.push(
@@ -176,22 +177,6 @@ step=(dt)=>{
     if(Math.abs(gp.axes[1]) > .1)playerY+= 5 * gp.axes[1];
   }
 
-  let x = chunkCoords[0] * chunkWidth,
-  left = x-chunkWidth,
-  right = x+chunkWidth,
-  y = chunkCoords[1] * chunkWidth,
-  top = y - chunkWidth,
-  bottom = y + chunkWidth;
-
-  // if(viewX < left) generateChunk([ chunkCoords[0]-1, chunkCoords[1] ]);
-  // if(viewX + WIDTH > right) generateChunk([ chunkCoords[0]+1, chunkCoords[1] ]);
-  // if(viewY < top) generateChunk([ chunkCoords[0], chunkCoords[1]+1 ]);
-  // if(viewY + HEIGHT > bottom) generateChunk([ chunkCoords[0], chunkCoords[1]-1 ]);
-
-  // if(playerX < left)chunkCoords[0]--;
-  // if(playerX > right)chunkCoords[0]++;
-  // if(playerY < top)chunkCoords[1]--;
-  // if(playerY > bottom)chunkCoords[1]++;
   chunkCoords[0] = playerX / (chunkWidth) | 0;
   chunkCoords[1] = playerY / (chunkWidth) | 0;
 
@@ -201,17 +186,7 @@ step=(dt)=>{
     currentChunk[1] = chunkCoords[1];
     generateChunk(chunkCoords);
   }
-  console.log(chunkCoords[0], chunkCoords[1], playerX, playerY, currentChunk[0], currentChunk[1], moved);
-
-
-
-  // if(playerX < 0)playerX = worldWidth;
-  // if(playerY < 0)playerY = worldHeight;
-  // if(playerX > worldWidth)playerX = 0;
-  // if(playerY > worldHeight)playerY = 0;
-
   viewX = playerX - WIDTH/2; viewY = playerY - HEIGHT/2;
-
 }
 
 
