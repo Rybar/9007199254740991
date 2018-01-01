@@ -6,12 +6,14 @@
   var t = 0, last = 0, now = 0,
 
 
-  worldWidth = 10000, worldHeight = 10000,
+  chunkWidth = 1024, chunkHeight = 1024,
 
-  playerX = worldWidth-WIDTH/2, playerY = worldHeight/2,
+  //worldWidth = Math.pow(2^54)
+
+  playerX = 0, playerY = 0,
 
   viewX = playerX - WIDTH/2, viewY = playerY - HEIGHT/2,
-  blocks = [],
+  blocks = [], lcg = new LCG(),
 
   gp = {},
 
@@ -25,27 +27,29 @@ load=()=>{
 
 init=()=>{
   //state vars, initial game state
-  let i = 60000;
+  chunkCoordinates = [0,0];
+  lcg.setSeed(3141592653)
+  let i = 6000;
   starColors = [17,18,19,20,21,22];
   while(--i){
     blocks.push(
-      Math.random()*worldWidth|0, //x
-      Math.random()*worldHeight|0, //y
+      lcg.nextIntRange(-chunkWidth, chunkWidth), //x
+      lcg.nextIntRange(-chunkWidth, chunkWidth), //y
       0, //WIDTH or Radius
       0, //HEIGHT
-      starColors[Math.random*6|0], //color
+      starColors[lcg.nextIntRange(0,5)], //color
       3, //type 0:block, 1:circle, 2: filledCircle, 3:dot
     )
   }
-  let j = 20000;
+  let j = 1000;
   while(--j){
     blocks.push(
-      Math.random()*worldWidth|0, //x
-      Math.random()*worldHeight|0, //y
-      Math.random()*20+5|0, //WIDTH or Radius
-      Math.random()*10+5|0, //HEIGHT
-      Math.random()*64|0, //color
-      Math.random()*3|0, //type 0:block, 1:circle, 2: filledCircle, 3:dot
+      lcg.nextIntRange(-chunkWidth, chunkWidth), //x
+      lcg.nextIntRange(-chunkWidth, chunkWidth), //y
+      lcg.nextIntRange(5,25), //WIDTH or Radius
+      lcg.nextIntRange(5,10), //HEIGHT
+      lcg.nextIntRange(0,63), //color
+      lcg.nextIntRange(0,2), //type 0:block, 1:circle, 2: filledCircle, 3:dot
     )
   }
   console.log(blocks)
@@ -63,10 +67,12 @@ drawThings=(dt)=>{
        type = blocks[i+5],
        p = 60; //overscan check to prevent popping and too much overdraw
 
-       if(x+playerX < worldWidth + WIDTH/2 && x < 0-p)x += worldWidth;
-       if(x-playerX > WIDTH/2 && x > WIDTH+p)x -= worldWidth;
-       if(y+playerY < worldHeight + HEIGHT/2 && y < 0-p)y += worldHeight;
-       if(y-playerY > HEIGHT/2 && y > HEIGHT+p)y -= worldHeight;
+       //now we need to generate new chunks at the edges insteda
+
+       // if(x+playerX < worldWidth + WIDTH/2 && x < 0-p)x += worldWidth;
+       // if(x-playerX > WIDTH/2 && x > WIDTH+p)x -= worldWidth;
+       // if(y+playerY < worldHeight + HEIGHT/2 && y < 0-p)y += worldHeight;
+       // if(y-playerY > HEIGHT/2 && y > HEIGHT+p)y -= worldHeight;
 
       if(x > 0-p && x < WIDTH+p && y > 0-p && y < HEIGHT+p){
         switch(type){
@@ -90,6 +96,9 @@ drawThings=(dt)=>{
     }
 
 }
+drawPlayer=()=>{
+  fillRect(playerX-viewX, playerY-viewY, 8, 8, 4);
+}
 
 drawMiniMap=(dt)=>{
   let scalar = 64/10000,
@@ -112,12 +121,14 @@ drawMiniMap=(dt)=>{
     pset(x+playerX*scalar, y+playerY*scalar, 4);
 
 }
+
 function buttonPressed(b) {
   if (typeof(b) == "object") {
     return b.pressed;
   }
   return b == 1.0;
 }
+
 loop=()=>{
   stats.begin();
   var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
@@ -140,7 +151,7 @@ step=(dt)=>{
   else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) playerX--;
   if(Key.isDown(Key.w)|| Key.isDown(Key.UP)) playerY--;
   else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN)) playerY++;
-  
+
   //gamepad input
   if(gp){
     if(buttonPressed(gp.buttons[3]) ) playerX++;
@@ -154,10 +165,10 @@ step=(dt)=>{
 
 
 
-  if(playerX < 0)playerX = worldWidth;
-  if(playerY < 0)playerY = worldHeight;
-  if(playerX > worldWidth)playerX = 0;
-  if(playerY > worldHeight)playerY = 0;
+  // if(playerX < 0)playerX = worldWidth;
+  // if(playerY < 0)playerY = worldHeight;
+  // if(playerX > worldWidth)playerX = 0;
+  // if(playerY > worldHeight)playerY = 0;
 
   viewX = playerX - WIDTH/2; viewY = playerY - HEIGHT/2;
 }
@@ -165,8 +176,8 @@ step=(dt)=>{
 draw=(dt)=>{
  clear(30);
  drawThings();
- fillRect(playerX-viewX, playerY-viewY, 8, 8, 4);
- drawMiniMap();
+ drawPlayer();
+ //drawMiniMap();
 }
 
 window.addEventListener('keyup', function (event) {
