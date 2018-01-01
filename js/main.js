@@ -5,7 +5,7 @@
 
   var t = 0, last = 0, now = 0,
 
-  chunkWidth = 128, chunkHeight = 128, //actually radius or half of chunk
+  chunkWidth = 512, chunkHeight = 512, //actually radius or half of chunk
 
   //worldWidth = Math.pow(2^54)
 
@@ -37,13 +37,13 @@ init=()=>{
 generateChunk=(coords)=>{
   lcg.setSeed(coords[0] * 314159 + coords[1] * 314159);
 
-  let i = 100,
-  x = coords[0] * chunkWidth,
+  let i = 4000,
+  x = coords[0] * chunkWidth * 2,
   left = x-chunkWidth,
-  right = left+chunkWidth*2,
-  y = coords[1] * chunkWidth,
+  right = x+chunkWidth,
+  y = coords[1] * chunkWidth * 2,
   top = y - chunkWidth,
-  bottom = top + chunkWidth*2;
+  bottom = y + chunkWidth;
   console.log(left,right,top,bottom);
 
   while(--i){
@@ -56,7 +56,7 @@ generateChunk=(coords)=>{
       3, //type 0:block, 1:circle, 2: filledCircle, 3:dot
     )
   }
-  let j = 20;
+  let j = 100;
   while(--j){
     blocks.push(
       lcg.nextIntRange(left,right), //x
@@ -180,7 +180,7 @@ step=(dt)=>{
   chunkCoords[0] = playerX / (chunkWidth) | 0;
   chunkCoords[1] = playerY / (chunkWidth) | 0;
 
-  if(chunkCoords[0] != currentChunk[0] || chunkCoords[0] != currentChunk[0]){
+  if(chunkCoords[0] != currentChunk[0] || chunkCoords[1] != currentChunk[1]){
     //moved++;
     currentChunk[0] = chunkCoords[0];
     currentChunk[1] = chunkCoords[1];
