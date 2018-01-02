@@ -5,7 +5,7 @@
 
   var t = 0, last = 0, now = 0,
 
-  chunkWidth = 32, chunkHeight = 32, //actually radius or half of chunk
+  chunkWidth = 128, chunkHeight = 128, //actually radius or half of chunk
 
   //worldWidth = Math.pow(2^54)
 
@@ -37,7 +37,7 @@ init=()=>{
 generateChunk=(coords)=>{
   lcg.setSeed(Math.abs(coords[0] * 314159 + coords[1] * 314159));
 
-  let i = 80,
+  let i = 800,
   x = coords[0] * chunkWidth * 2,
   left = x-chunkWidth,
   right = x+chunkWidth,
@@ -58,13 +58,13 @@ generateChunk=(coords)=>{
       3, //type 0:block, 1:circle, 2: filledCircle, 3:dot
     )
   }
-  let j = 10;
+  let j = 12;
   while(--j){
     blocks.push(
       lcg.nextIntRange(left,right), //x
       lcg.nextIntRange(top,bottom), //y
-      lcg.nextIntRange(5,10), //WIDTH or Radius
-      lcg.nextIntRange(5,10), //HEIGHT
+      lcg.nextIntRange(5,25), //WIDTH or Radius
+      lcg.nextIntRange(5,25), //HEIGHT
       lcg.nextIntRange(0,63), //color
       lcg.nextIntRange(0,2), //type 0:block, 1:circle, 2: filledCircle, 3:dot
     )
@@ -73,7 +73,7 @@ generateChunk=(coords)=>{
 }
 
 drawThings=(dt)=>{
-
+  
   for(let i = 0; i < blocks.length; i+=6){
       let x = blocks[i]-viewX,
        y = blocks[i+1]-viewY,
@@ -193,7 +193,7 @@ step=(dt)=>{
 
 
 draw=(dt)=>{
- clear(30);
+ clear(0);
  drawThings();
  drawPlayer();
  //drawMiniMap();
