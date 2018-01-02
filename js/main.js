@@ -12,7 +12,7 @@
   playerX = 0, playerY = 0,
 
   viewX = playerX - WIDTH/2, viewY = playerY - HEIGHT/2,
-  blocks = [], lcg = new LCG(), starColors, currentChunk, moved,
+  blocks = [], lcg = new LCG(), starColors, currentChunk, generated = [],
 
   gp = {},
 
@@ -30,50 +30,71 @@ init=()=>{
   moved = 0;
   lcg.setSeed(chunkCoords[0] * 314159 + chunkCoords[1] * 1.61);
   starColors = [17,18,19,20,21,22];
-  generateChunk(chunkCoords);
+  generateChunks(chunkCoords);
   loop();
 }
 
-generateChunk=(coords)=>{
-  lcg.setSeed(Math.abs(coords[0] * 314159 + coords[1] * 314159));
-
-  let i = 800,
-  x = coords[0] * chunkWidth * 2,
-  left = x-chunkWidth,
-  right = x+chunkWidth,
-  y = coords[1] * chunkWidth * 2,
-  top = y - chunkWidth,
-  bottom = y + chunkWidth;
-  console.log(left,right,top,bottom);
-
-
-
-  while(--i){
-    blocks.push(
-      lcg.nextIntRange(left, right), //x
-      lcg.nextIntRange(top, bottom), //y
-      0, //WIDTH or Radius
-      0, //HEIGHT
-      starColors[lcg.nextIntRange(0,5)], //color
-      3, //type 0:block, 1:circle, 2: filledCircle, 3:dot
-    )
+findChunk=(coords)=>{
+  let results = false;
+  for(let i = 0; i < generated.length; i++){
+    if(generated[i][0] == coords[0] && generated[i][1] == coords[1]){
+      results = true;
+    }
+  return results;
   }
-  let j = 12;
-  while(--j){
-    blocks.push(
-      lcg.nextIntRange(left,right), //x
-      lcg.nextIntRange(top,bottom), //y
-      lcg.nextIntRange(5,25), //WIDTH or Radius
-      lcg.nextIntRange(5,25), //HEIGHT
-      lcg.nextIntRange(0,63), //color
-      lcg.nextIntRange(0,2), //type 0:block, 1:circle, 2: filledCircle, 3:dot
-    )
-  }
-  console.log(blocks.length);
 }
 
+generateChunk=(coords)=>{
+  if(!findChunk(coords) ){
+    generated.push(coords.slice());
+    lcg.setSeed(Math.abs(coords[0] * 314159 + coords[1] * 314159));
+
+    let i = 800,
+    x = coords[0] * chunkWidth * 2,
+    left = x-chunkWidth,
+    right = x+chunkWidth,
+    y = coords[1] * chunkWidth * 2,
+    top = y - chunkWidth,
+    bottom = y + chunkWidth;
+    //console.log(left,right,top,bottom);
+
+
+
+    while(--i){
+      blocks.push(
+        lcg.nextIntRange(left, right), //x
+        lcg.nextIntRange(top, bottom), //y
+        0, //WIDTH or Radius
+        0, //HEIGHT
+        starColors[lcg.nextIntRange(0,5)], //color
+        3, //type 0:block, 1:circle, 2: filledCircle, 3:dot
+      )
+    }
+    let j = 12;
+    while(--j){
+      blocks.push(
+        lcg.nextIntRange(left,right), //x
+        lcg.nextIntRange(top,bottom), //y
+        lcg.nextIntRange(5,25), //WIDTH or Radius
+        lcg.nextIntRange(5,25), //HEIGHT
+        lcg.nextIntRange(0,63), //color
+        lcg.nextIntRange(0,2), //type 0:block, 1:circle, 2: filledCircle, 3:dot
+      )
+    }
+  }
+
+  console.log(blocks.length, generated);
+}
+
+generateChunks=(coords)=>{
+  generateChunk(coords);
+  generateChunk([ coords[0]-1, coords[1] ]);
+  generateChunk([ coords[0], coords[1]-1 ]);
+  generateChunk([ coords[0]+1, coords[1] ]);
+  generateChunk([ coords[0], coords[1]+1 ]);
+}
 drawThings=(dt)=>{
-  
+
   for(let i = 0; i < blocks.length; i+=6){
       let x = blocks[i]-viewX,
        y = blocks[i+1]-viewY,
@@ -186,7 +207,7 @@ step=(dt)=>{
     //moved++;
     currentChunk[0] = chunkCoords[0];
     currentChunk[1] = chunkCoords[1];
-    generateChunk(chunkCoords);
+    generateChunks(chunkCoords);
   }
   viewX = playerX - WIDTH/2; viewY = playerY - HEIGHT/2;
 }
