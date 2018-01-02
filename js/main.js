@@ -35,7 +35,7 @@ init=()=>{
 }
 
 generateChunk=(coords)=>{
-  lcg.setSeed(coords[0] * 314159 + coords[1] * 314159);
+  lcg.setSeed(Math.abs(coords[0] * 314159 + coords[1] * 314159));
 
   let i = 80,
   x = coords[0] * chunkWidth * 2,
@@ -45,6 +45,8 @@ generateChunk=(coords)=>{
   top = y - chunkWidth,
   bottom = y + chunkWidth;
   console.log(left,right,top,bottom);
+
+
 
   while(--i){
     blocks.push(
