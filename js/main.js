@@ -28,7 +28,7 @@ init=()=>{
   chunkCoords = [0,0];
   currentChunk = [0,0];
   moved = 0;
-  lcg.setSeed(chunkCoords[0] * 314159 + chunkCoords[1] * 314159);
+  lcg.setSeed(chunkCoords[0] * 314159 + chunkCoords[1] * 1.61);
   starColors = [17,18,19,20,21,22];
   generateChunk(chunkCoords);
   loop();
@@ -95,15 +95,15 @@ drawThings=(dt)=>{
           case 0:
           let i = 5;
           while(i--){
-            fillCircle(x+Math.random()*6-3,y+Math.random()*6-3, wr, c);
+            fillRect(x+Math.random()*6-3,y+Math.random()*6-3, wr, h, c);
           }
           //fillRect(x, y, wr, h, c);
           break;
           case 1:
-          circle(x,y, wr, c);
+          rect(x,y, wr, h, c);
           break;
           case 2:
-          fillCircle(x*1.1,y*1.1, wr, c);
+          fillRect(x*1.1,y*1.1, wr, h, c);
           case 3:
           pset(x, y, c);
           break;
@@ -179,8 +179,8 @@ step=(dt)=>{
     if(Math.abs(gp.axes[1]) > .1)playerY+= 5 * gp.axes[1];
   }
 
-  chunkCoords[0] = playerX / (chunkWidth) | 0;
-  chunkCoords[1] = playerY / (chunkWidth) | 0;
+  chunkCoords[0] = Math.round( playerX / (chunkWidth * 2) );
+  chunkCoords[1] = Math.round( playerY / (chunkWidth * 2) );
 
   if(chunkCoords[0] != currentChunk[0] || chunkCoords[1] != currentChunk[1]){
     //moved++;
