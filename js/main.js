@@ -5,19 +5,20 @@
 
   var t = 0, last = 0, now = 0,
 
-  chunkWidth = 128, chunkHeight = 128, //actually radius or half of chunk
+  chunkWidth = 32, chunkHeight = 32, //actually radius or half of chunk
 
   //worldWidth = Math.pow(2^54)
 
   playerX = 0, playerY = 0,
 
   viewX = playerX - WIDTH/2, viewY = playerY - HEIGHT/2,
-  blocks = [], lcg = new LCG(), starColors, currentChunk, generated = [],
+  blocks,
+  lcg = new LCG(), starColors, currentChunk,
 
-  gp = {},
+  gp = {};
 
 
-
+   window.generated = [];
 
 load=()=>{
   //load external non-script assets
@@ -28,7 +29,7 @@ init=()=>{
   chunkCoords = [0,0];
   currentChunk = [0,0];
   moved = 0;
-  lcg.setSeed(chunkCoords[0] * 314159 + chunkCoords[1] * 1.61);
+
   starColors = [17,18,19,20,21,22];
   generateChunks(chunkCoords);
   loop();
@@ -37,7 +38,7 @@ init=()=>{
 findChunk=(coords)=>{
   let results = false;
   for(let i = 0; i < generated.length; i++){
-    if(generated[i][0] == coords[0] && generated[i][1] == coords[1]){
+    if(generated[i][0][0] == coords[0] && generated[i][0][1] == coords[1]){
       results = true;
     }
   return results;
@@ -45,45 +46,46 @@ findChunk=(coords)=>{
 }
 
 generateChunk=(coords)=>{
-  if(!findChunk(coords) ){
-    generated.push(coords.slice());
-    lcg.setSeed(Math.abs(coords[0] * 314159 + coords[1] * 314159));
 
-    let i = 800,
-    x = coords[0] * chunkWidth * 2,
+  if(!findChunk(coords) ){
+    lcg.setSeed(1117+Math.abs(coords[0]+coords[1]));
+
+    var x = coords[0] * chunkWidth * 2,
     left = x-chunkWidth,
     right = x+chunkWidth,
     y = coords[1] * chunkWidth * 2,
     top = y - chunkWidth,
     bottom = y + chunkWidth;
-    //console.log(left,right,top,bottom);
 
-
-
+    let chunk = [];
+    let i = 10;
     while(--i){
-      blocks.push(
+      chunk.push(
         lcg.nextIntRange(left, right), //x
         lcg.nextIntRange(top, bottom), //y
         0, //WIDTH or Radius
         0, //HEIGHT
-        starColors[lcg.nextIntRange(0,5)], //color
+        30,//starColors[lcg.nextIntRange(0,5)], //color
         3, //type 0:block, 1:circle, 2: filledCircle, 3:dot
       )
     }
-    let j = 12;
+    let j = 100;
+
     while(--j){
-      blocks.push(
+      chunk.push(
         lcg.nextIntRange(left,right), //x
         lcg.nextIntRange(top,bottom), //y
-        lcg.nextIntRange(5,25), //WIDTH or Radius
-        lcg.nextIntRange(5,25), //HEIGHT
-        lcg.nextIntRange(0,63), //color
+        lcg.nextIntRange(5,5), //WIDTH or Radius
+        lcg.nextIntRange(5,5), //HEIGHT
+        4,//lcg.nextIntRange(0,63), //color
         lcg.nextIntRange(0,2), //type 0:block, 1:circle, 2: filledCircle, 3:dot
       )
     }
+    generated.push([coords.slice(), chunk]);
   }
 
-  console.log(blocks.length, generated);
+console.log(generated.length);
+
 }
 
 generateChunks=(coords)=>{
@@ -92,71 +94,49 @@ generateChunks=(coords)=>{
   generateChunk([ coords[0], coords[1]-1 ]);
   generateChunk([ coords[0]+1, coords[1] ]);
   generateChunk([ coords[0], coords[1]+1 ]);
+  // generateChunk([ coords[0]-1, coords[1]-1 ]);
+  // generateChunk([ coords[0]+1, coords[1]-1 ]);
+  // generateChunk([ coords[0]+1, coords[1]+1 ]);
+  // generateChunk([ coords[0]-1, coords[1]+1 ]);
 }
+
 drawThings=(dt)=>{
 
-  for(let i = 0; i < blocks.length; i+=6){
-      let x = blocks[i]-viewX,
+  for(let j = 0; j < generated.length; j++){
+    for(let i = 0; i < generated[j][1].length; i++){
+
+      blocks = generated[j][1],
+      x = blocks[i]-viewX,
        y = blocks[i+1]-viewY,
        c = blocks[i+4],
        wr = blocks[i+2],
        h = blocks[i+3],
        type = blocks[i+5],
-       p = 60; //overscan check to prevent popping and too much overdraw
-
-       //now we need to generate new chunks at the edges instead of wrapping
-
-       // if(x+playerX < worldWidth + WIDTH/2 && x < 0-p)x += worldWidth;
-       // if(x-playerX > WIDTH/2 && x > WIDTH+p)x -= worldWidth;
-       // if(y+playerY < worldHeight + HEIGHT/2 && y < 0-p)y += worldHeight;
-       // if(y-playerY > HEIGHT/2 && y > HEIGHT+p)y -= worldHeight;
+       p = 1; //overscan check to prevent popping and too much overdraw
 
       if(x > 0-p && x < WIDTH+p && y > 0-p && y < HEIGHT+p){
         switch(type){
-          case 0:
-          let i = 5;
-          while(i--){
-            fillRect(x+Math.random()*6-3,y+Math.random()*6-3, wr, h, c);
-          }
-          //fillRect(x, y, wr, h, c);
-          break;
-          case 1:
-          rect(x,y, wr, h, c);
-          break;
-          case 2:
-          fillRect(x*1.1,y*1.1, wr, h, c);
-          case 3:
+          // case 0:
+          //   fillRect(x,y, wr, h, c);
+          // break;
+          // case 1:
+          // rect(x,y, wr, h, c);
+          // break;
+          // case 2:
+          // //fillRect(x*1.1,y*1.1, wr, h, c);
+          // breakl
+          // case 3:
+          default:
           pset(x, y, c);
           break;
         }
       }
     }
+  }
 
 }
 drawPlayer=()=>{
   fillRect(playerX-viewX, playerY-viewY, 8, 8, 4);
-}
-
-drawMiniMap=(dt)=>{
-  let scalar = 64/10000,
-  x = 320-70,
-  y = 180-70;
-  fillRect(x,y, 64,64, 1);
-  for(let i = 0; i < blocks.length; i+=6){
-      let ex = blocks[i]*scalar,
-       ey = blocks[i+1]*scalar,
-       c = blocks[i+4],
-       wr = blocks[i+2],
-       h = blocks[i+3],
-       type = blocks[i+5],
-       p = 100;
-
-      if(type == 2 && wr > 23){
-          pset(x + ex,y + ey,30)
-      }
-    }
-    pset(x+playerX*scalar, y+playerY*scalar, 4);
-
 }
 
 function buttonPressed(b) {
