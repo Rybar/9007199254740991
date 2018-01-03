@@ -5,9 +5,7 @@
 
   var t = 0, last = 0, now = 0,
 
-  chunkWidth = 32, chunkHeight = 32, //actually radius or half of chunk
-
-  //worldWidth = Math.pow(2^54)
+  chunkWidth = 256, chunkHeight = 256, //actually radius or half of chunk
 
   playerX = 0, playerY = 0,
 
@@ -16,7 +14,6 @@
   lcg = new LCG(), starColors, currentChunk,
 
   gp = {};
-
 
    window.generated = [];
 
@@ -28,26 +25,27 @@ load=()=>{
 init=()=>{
   chunkCoords = [0,0];
   currentChunk = [0,0];
-  moved = 0;
-
-  starColors = [17,18,19,20,21,22];
+//  moved = 0;
+  starColors = [17,18,19,20,21,22,30,30,30,30,30,30,30,30];
   generateChunks(chunkCoords);
   loop();
 }
 
-findChunk=(coords)=>{
+findChunk=(coords, generated)=>{
   let results = false;
   for(let i = 0; i < generated.length; i++){
+    console.log(generated[i][0][0], coords[0], generated[i][0][1], coords[1] )
     if(generated[i][0][0] == coords[0] && generated[i][0][1] == coords[1]){
       results = true;
     }
-  return results;
+    console.log('been here : ' + results);
+    return results;
   }
 }
 
 generateChunk=(coords)=>{
 
-  if(!findChunk(coords) ){
+  if(!findChunk(coords, generated) ){
     lcg.setSeed(1117+Math.abs(coords[0]+coords[1]));
 
     var x = coords[0] * chunkWidth * 2,
@@ -58,24 +56,24 @@ generateChunk=(coords)=>{
     bottom = y + chunkWidth;
 
     let chunk = [];
-    let i = 10;
+    let i = 4000;
     while(--i){
       chunk.push(
         lcg.nextIntRange(left, right), //x
         lcg.nextIntRange(top, bottom), //y
         0, //WIDTH or Radius
         0, //HEIGHT
-        starColors[lcg.nextIntRange(0,5)], //color
+        starColors[lcg.nextIntRange(0,starColors.length-1)], //color
         3, //type 0:block, 1:circle, 2: filledCircle, 3:dot
       )
     }
-    let j = 100;
+    let j = 10;
 
     while(--j){
       chunk.push(
         lcg.nextIntRange(left,right), //x
         lcg.nextIntRange(top,bottom), //y
-        lcg.nextIntRange(5,5), //WIDTH or Radius
+        lcg.nextIntRange(40,100), //WIDTH or Radius
         lcg.nextIntRange(5,5), //HEIGHT
         lcg.nextIntRange(0,63), //color
         lcg.nextIntRange(0,2), //type 0:block, 1:circle, 2: filledCircle, 3:dot
@@ -84,7 +82,7 @@ generateChunk=(coords)=>{
     generated.push([coords.slice(), chunk]);
   }
 
-console.log(generated.length);
+//console.log(generated.length);
 
 }
 
@@ -98,21 +96,21 @@ generateChunks=(coords)=>{
   generateChunk([ coords[0]+1, coords[1]-1 ]);
   generateChunk([ coords[0]+1, coords[1]+1 ]);
   generateChunk([ coords[0]-1, coords[1]+1 ]);
+  console.log(generated.length);
+
 }
 
 cullChunks=(coords)=>{
   let i = generated.length;
   while(--i){
-    if(generated[i][0][0] > coords[0]+1 || generated[i][0][0] < coords[0]-1){
-      if(generated[i][0][1] > coords[1]+1 || generated[i][0][1] < coords[1]-1){
+    if(generated[i][0][0] > coords[0]+1 || generated[i][0][0] < coords[0]-1
+|| generated[i][0][1] > coords[1]+1 || generated[i][0][1] < coords[1]-1){
         generated.splice(i,1);
-      }
     }
   }
 }
 
 drawThings=(dt)=>{
-
   for(let j = 0; j < generated.length; j++){
     for(let i = 0; i < generated[j][1].length; i+=6){
 
@@ -123,18 +121,18 @@ drawThings=(dt)=>{
        wr = blocks[i+2],
        h = blocks[i+3],
        type = blocks[i+5],
-       p = 1; //overscan check to prevent popping and too much overdraw
+       p = 100; //overscan check to prevent popping and too much overdraw
 
       if(x > 0-p && x < WIDTH+p && y > 0-p && y < HEIGHT+p){
         switch(type){
           case 0:
-            fillRect(x,y, wr, h, c);
+            fillRect(x,y, wr, wr, c);
           break;
           case 1:
-          rect(x,y, wr, h, c);
+          rect(x,y, wr, wr, c);
           break;
           case 2:
-          fillRect(x*1.1,y*1.1, wr, h, c);
+          fillRect(x*1.1,y*1.1, wr, wr, c);
           break;
           default:
           pset(x, y, c);
@@ -174,6 +172,7 @@ loop=()=>{
 }
 
 step=(dt)=>{
+  cullChunks(currentChunk);
   //keyboard input
   if(Key.isDown(Key.d) || Key.isDown(Key.RIGHT)) playerX++;
   else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) playerX--;
@@ -202,7 +201,7 @@ step=(dt)=>{
   }
   viewX = playerX - WIDTH/2; viewY = playerY - HEIGHT/2;
 
-  cullChunks(chunkCoords);
+
 }
 
 
