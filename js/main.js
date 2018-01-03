@@ -100,6 +100,16 @@ generateChunks=(coords)=>{
   generateChunk([ coords[0]-1, coords[1]+1 ]);
 }
 
+cullChunks=(coords)=>{
+  let i = generated.length;
+  while(--i){
+    if(generated[i][0][0] > coords[0]+1 || generated[i][0][0] < coords[0]-1){
+      if(generated[i][0][1] > coords[1]+1 || generated[i][0][1] < coords[1]-1){
+        generated.splice(i,1);
+      }
+    }
+  }
+}
 
 drawThings=(dt)=>{
 
@@ -191,6 +201,8 @@ step=(dt)=>{
     generateChunks(chunkCoords);
   }
   viewX = playerX - WIDTH/2; viewY = playerY - HEIGHT/2;
+
+  cullChunks(chunkCoords);
 }
 
 
