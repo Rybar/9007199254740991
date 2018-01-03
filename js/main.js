@@ -129,10 +129,11 @@ drawThings=(dt)=>{
             fillRect(x,y, wr, wr, c);
           break;
           case 1:
-          rect(x,y, wr, wr, c);
+            rect(x,y, wr, wr, c);
           break;
           case 2:
-          fillRect(x*1.1,y*1.1, wr, wr, c);
+            renderTarget = COLLISION; fillRect(x,y, wr, wr, 1);
+            renderTarget = SCREEN; fillRect(x,y, wr, wr, c);
           break;
           default:
           pset(x, y, c);
@@ -174,10 +175,12 @@ loop=()=>{
 step=(dt)=>{
   cullChunks(currentChunk);
   //keyboard input
-  if(Key.isDown(Key.d) || Key.isDown(Key.RIGHT)) playerX++;
-  else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) playerX--;
-  if(Key.isDown(Key.w)|| Key.isDown(Key.UP)) playerY--;
-  else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN)) playerY++;
+  if(Key.isDown(Key.d) || Key.isDown(Key.RIGHT)) playerX+=3;
+  else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) playerX-=3;
+  if(Key.isDown(Key.w)|| Key.isDown(Key.UP)) playerY-=3;
+  else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN)) playerY+=3;
+  
+  
 
   //gamepad input
   if(gp){
