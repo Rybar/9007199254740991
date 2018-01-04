@@ -5,17 +5,15 @@
 
   var t = 0, last = 0, now = 0,
 
-  chunkWidth = 256, chunkHeight = 256, //actually radius or half of chunk
+  chunkWidth = 360, //actually radius or half of chunk
 
   playerX = 0, playerY = 0,
 
   viewX = playerX - WIDTH/2, viewY = playerY - HEIGHT/2,
   blocks,
-  lcg = new LCG(), starColors, currentChunk,
+  lcg = new LCG(), scrNG = new LCG(), starColors, currentChunk, generated = [],
 
   gp = {};
-
-   window.generated = [];
 
 load=()=>{
   //load external non-script assets
@@ -46,7 +44,7 @@ findChunk=(coords, generated)=>{
 generateChunk=(coords)=>{
 
   if(!findChunk(coords, generated) ){
-    lcg.setSeed(1117+Math.abs(coords[0]+coords[1]));
+    lcg.setSeed(1117+Math.abs(coords[0]+coords[1])*1234.5678);
 
     var x = coords[0] * chunkWidth * 2,
     left = x-chunkWidth,
@@ -56,7 +54,7 @@ generateChunk=(coords)=>{
     bottom = y + chunkWidth;
 
     let chunk = [];
-    let i = 4000;
+    let i = 1000;
     while(--i){
       chunk.push(
         lcg.nextIntRange(left, right), //x
@@ -73,7 +71,7 @@ generateChunk=(coords)=>{
       chunk.push(
         lcg.nextIntRange(left,right), //x
         lcg.nextIntRange(top,bottom), //y
-        lcg.nextIntRange(40,100), //WIDTH or Radius
+        lcg.nextIntRange(60,180), //WIDTH or Radius
         lcg.nextIntRange(5,5), //HEIGHT
         lcg.nextIntRange(0,63), //color
         lcg.nextIntRange(0,2), //type 0:block, 1:circle, 2: filledCircle, 3:dot
@@ -81,8 +79,6 @@ generateChunk=(coords)=>{
     }
     generated.push([coords.slice(), chunk]);
   }
-
-//console.log(generated.length);
 
 }
 
@@ -104,7 +100,7 @@ cullChunks=(coords)=>{
   let i = generated.length;
   while(--i){
     if(generated[i][0][0] > coords[0]+1 || generated[i][0][0] < coords[0]-1
-|| generated[i][0][1] > coords[1]+1 || generated[i][0][1] < coords[1]-1){
+      || generated[i][0][1] > coords[1]+1 || generated[i][0][1] < coords[1]-1){
         generated.splice(i,1);
     }
   }
@@ -126,17 +122,18 @@ drawThings=(dt)=>{
       if(x > 0-p && x < WIDTH+p && y > 0-p && y < HEIGHT+p){
         switch(type){
           case 0:
-            fillRect(x,y, wr, wr, c);
+            //renderTarget = MIDGROUND; fillRect(x,y, wr, wr, c);
           break;
           case 1:
-            rect(x,y, wr, wr, c);
+          renderTarget = COLLISION; fillRect(x,y, wr, wr, 1);
+          renderTarget = FOREGROUND; drawPlanet(x,y,wr,c);
           break;
           case 2:
-            renderTarget = COLLISION; fillRect(x,y, wr, wr, 1);
-            renderTarget = SCREEN; fillRect(x,y, wr, wr, c);
+
           break;
           default:
-          pset(x, y, c);
+          renderTarget = BACKGROUND; pset(x, y, c);
+          renderTarget = SCREEN;
           break;
           //default
         }
@@ -146,7 +143,30 @@ drawThings=(dt)=>{
 
 }
 drawPlayer=()=>{
+  renderTarget = FOREGROUND;
   fillRect(playerX-viewX, playerY-viewY, 8, 8, 4);
+}
+drawPlanet=(x,y,w,c)=>{
+  scrNG.setSeed(1019);
+  fillRect(x,y,w,w,c);
+  let i = w*w/4|0;
+  while(i--)pset(scrNG.nextIntRange(x, x+w), scrNG.nextIntRange(y, y+w), c+1);
+  rect(x,y,w,w,c+2);
+  rect(x+4,y+4,w-8,w-8,c+2);
+}
+composite=()=>{
+  renderTarget = SCREEN;
+
+  renderSource = BACKGROUND; spr();
+  renderSource = MIDGROUND; spr();
+  renderSource = FOREGROUND; spr();
+
+}
+clearLayers=()=>{
+  renderTarget = SCREEN; clear(0);
+  renderTarget = BACKGROUND; clear(0);
+  renderTarget = MIDGROUND; clear(0);
+  renderTarget = FOREGROUND; clear(0);
 }
 
 function buttonPressed(b) {
@@ -179,8 +199,8 @@ step=(dt)=>{
   else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) playerX-=3;
   if(Key.isDown(Key.w)|| Key.isDown(Key.UP)) playerY-=3;
   else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN)) playerY+=3;
-  
-  
+
+
 
   //gamepad input
   if(gp){
@@ -209,9 +229,10 @@ step=(dt)=>{
 
 
 draw=(dt)=>{
- clear(0);
+ clearLayers(0);
  drawThings();
  drawPlayer();
+ composite();
  //drawMiniMap();
 }
 
