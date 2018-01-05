@@ -7,7 +7,8 @@
 
   chunkWidth = 360, //actually radius or half of chunk
 
-  playerX = 0, playerY = 0,
+  playerX = 0, playerY = 0, pDeltaX = 0, pDeltaY = 0, pColor = 4,
+  pWidth = 8, pHeight = 8, pTop = [], pBottom=[], pLeft = [], pRight = [], pHit,
 
   viewX = playerX - WIDTH/2, viewY = playerY - HEIGHT/2,
   blocks,
@@ -39,6 +40,11 @@ findChunk=(coords, generated)=>{
     console.log('been here : ' + results);
     return results;
   }
+}
+
+overlaps=(o)=>{
+  let x= o[0]-=viewX, y= o[1]-=viewY;
+  return ram[COLLISION + y*WIDTH+x];
 }
 
 generateChunk=(coords)=>{
@@ -73,7 +79,7 @@ generateChunk=(coords)=>{
         lcg.nextIntRange(top,bottom), //y
         lcg.nextIntRange(60,180), //WIDTH or Radius
         lcg.nextIntRange(5,5), //HEIGHT
-        lcg.nextIntRange(0,63), //color
+        lcg.nextIntRange(3,63), //color
         lcg.nextIntRange(0,2), //type 0:block, 1:circle, 2: filledCircle, 3:dot
       )
     }
@@ -117,7 +123,7 @@ drawThings=(dt)=>{
        wr = blocks[i+2],
        h = blocks[i+3],
        type = blocks[i+5],
-       p = 100; //overscan check to prevent popping and too much overdraw
+       p = 200; //overscan check to prevent popping and too much overdraw
 
       if(x > 0-p && x < WIDTH+p && y > 0-p && y < HEIGHT+p){
         switch(type){
@@ -142,10 +148,19 @@ drawThings=(dt)=>{
   }
 
 }
+
 drawPlayer=()=>{
   renderTarget = FOREGROUND;
-  fillRect(playerX-viewX, playerY-viewY, 8, 8, 4);
+  fillRect(playerX-viewX, playerY-viewY, 8, 8, pColor);
+  pset(pTop[0], pTop[1], 21);
+  pset(pLeft[0], pLeft[1], 12);
+  pset(pRight[0], pRight[1], 13);
+  pset(pBottom[0], pBottom[1], 14);
+
+
+
 }
+
 drawPlanet=(x,y,w,c)=>{
   scrNG.setSeed(1019);
   fillRect(x,y,w,w,c);
@@ -154,6 +169,7 @@ drawPlanet=(x,y,w,c)=>{
   rect(x,y,w,w,c+2);
   rect(x+4,y+4,w-8,w-8,c+2);
 }
+
 composite=()=>{
   renderTarget = SCREEN;
 
@@ -162,11 +178,41 @@ composite=()=>{
   renderSource = FOREGROUND; spr();
 
 }
+
 clearLayers=()=>{
   renderTarget = SCREEN; clear(0);
   renderTarget = BACKGROUND; clear(0);
   renderTarget = MIDGROUND; clear(0);
   renderTarget = FOREGROUND; clear(0);
+  renderTarget = COLLISION; clear(0);
+}
+
+updatePlayer=()=>{
+  pTop = [playerX+pWidth/2, playerY];
+  pLeft = [playerX, playerY+pHeight/2];
+  pRight = [playerX+pWidth, playerY+pHeight/2];
+  pBottom = [playerX+pWidth/2, playerY+pHeight];
+  pHit = 0;
+  pOverlaps = [overlaps(pTop), overlaps(pBottom), overlaps(pLeft), overlaps(pRight)];
+  //console.log(pOverlaps);
+  pHit = pOverlaps.find(function(value){return value > 0});
+  pColor = pHit ? 12 : 4;
+
+//keyboard input
+  if(Key.isDown(Key.d) || Key.isDown(Key.RIGHT)) playerX+=3;
+  else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) playerX-=3;
+  if(Key.isDown(Key.w)|| Key.isDown(Key.UP)) playerY-=3;
+  else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN)) playerY+=3;
+//gamepad input
+  if(gp){
+    if(buttonPressed(gp.buttons[3]) ) playerX++;
+    else if(buttonPressed(gp.buttons[2]) ) playerX--;
+    if(buttonPressed(gp.buttons[0]) ) playerY--;
+    else if(buttonPressed(gp.buttons[1]) ) playerY++;
+
+    if(Math.abs(gp.axes[0]) > .1)playerX+= 5 * gp.axes[0]; //allow for deadzone
+    if(Math.abs(gp.axes[1]) > .1)playerY+= 5 * gp.axes[1];
+  }
 }
 
 function buttonPressed(b) {
@@ -194,24 +240,7 @@ loop=()=>{
 
 step=(dt)=>{
   cullChunks(currentChunk);
-  //keyboard input
-  if(Key.isDown(Key.d) || Key.isDown(Key.RIGHT)) playerX+=3;
-  else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) playerX-=3;
-  if(Key.isDown(Key.w)|| Key.isDown(Key.UP)) playerY-=3;
-  else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN)) playerY+=3;
-
-
-
-  //gamepad input
-  if(gp){
-    if(buttonPressed(gp.buttons[3]) ) playerX++;
-    else if(buttonPressed(gp.buttons[2]) ) playerX--;
-    if(buttonPressed(gp.buttons[0]) ) playerY--;
-    else if(buttonPressed(gp.buttons[1]) ) playerY++;
-
-    if(Math.abs(gp.axes[0]) > .1)playerX+= 5 * gp.axes[0]; //allow for deadzone
-    if(Math.abs(gp.axes[1]) > .1)playerY+= 5 * gp.axes[1];
-  }
+  updatePlayer();
 
   chunkCoords[0] = Math.round( playerX / (chunkWidth * 2) );
   chunkCoords[1] = Math.round( playerY / (chunkWidth * 2) );
