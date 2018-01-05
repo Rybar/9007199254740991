@@ -3,12 +3,18 @@
   stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
   document.body.appendChild( stats.dom );
 
+  const TOP = 0;
+  const BOTTOM = 1;
+  const LEFT = 2;
+  const RIGHT = 3;
+
   var t = 0, last = 0, now = 0,
 
   chunkWidth = 360, //actually radius or half of chunk
 
   playerX = 0, playerY = 0, pDeltaX = 0, pDeltaY = 0, pColor = 4,
   pWidth = 8, pHeight = 8, pTop = [], pBottom=[], pLeft = [], pRight = [], pHit,
+  pMaxVelX = 2, pMaxVelY = 2, pSpeed = .2, pDrag = .98,
 
   viewX = playerX - WIDTH/2, viewY = playerY - HEIGHT/2,
   blocks,
@@ -43,7 +49,7 @@ findChunk=(coords, generated)=>{
 }
 
 overlaps=(o)=>{
-  let x= o[0]-=viewX, y= o[1]-=viewY;
+  let x = (o[0]-=viewX)|0, y = (o[1]-=viewY)|0;
   return ram[COLLISION + y*WIDTH+x];
 }
 
@@ -188,31 +194,44 @@ clearLayers=()=>{
 }
 
 updatePlayer=()=>{
-  pTop = [playerX+pWidth/2, playerY];
-  pLeft = [playerX, playerY+pHeight/2];
-  pRight = [playerX+pWidth, playerY+pHeight/2];
-  pBottom = [playerX+pWidth/2, playerY+pHeight];
-  pHit = 0;
-  pOverlaps = [overlaps(pTop), overlaps(pBottom), overlaps(pLeft), overlaps(pRight)];
-  //console.log(pOverlaps);
-  pHit = pOverlaps.find(function(value){return value > 0});
-  pColor = pHit ? 12 : 4;
-
 //keyboard input
-  if(Key.isDown(Key.d) || Key.isDown(Key.RIGHT)) playerX+=3;
-  else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) playerX-=3;
-  if(Key.isDown(Key.w)|| Key.isDown(Key.UP)) playerY-=3;
-  else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN)) playerY+=3;
+  if(Key.isDown(Key.d) || Key.isDown(Key.RIGHT)) pDeltaX+=pSpeed;
+  else if(Key.isDown(Key.a)|| Key.isDown(Key.LEFT)) pDeltaX-=pSpeed;
+  if(Key.isDown(Key.w)|| Key.isDown(Key.UP)) pDeltaY-=pSpeed;
+  else if(Key.isDown(Key.s)|| Key.isDown(Key.DOWN)) pDeltaY+=pSpeed;
 //gamepad input
   if(gp){
-    if(buttonPressed(gp.buttons[3]) ) playerX++;
-    else if(buttonPressed(gp.buttons[2]) ) playerX--;
-    if(buttonPressed(gp.buttons[0]) ) playerY--;
-    else if(buttonPressed(gp.buttons[1]) ) playerY++;
+    if(buttonPressed(gp.buttons[3]) ) pDeltaX+=pSpeed;
+    else if(buttonPressed(gp.buttons[2]) ) pDeltaX-=pSpeed;
+    if(buttonPressed(gp.buttons[0]) ) pDeltaY-=pSpeed;
+    else if(buttonPressed(gp.buttons[1]) ) pDeltaY+=pSpeed;
 
-    if(Math.abs(gp.axes[0]) > .1)playerX+= 5 * gp.axes[0]; //allow for deadzone
-    if(Math.abs(gp.axes[1]) > .1)playerY+= 5 * gp.axes[1];
+    if(Math.abs(gp.axes[0]) > .1)pDeltaX+= pSpeed * gp.axes[0]; //allow for deadzone
+    if(Math.abs(gp.axes[1]) > .1)pDeltaY+= pSpeed * gp.axes[1];
   }
+  pDeltaX *= pDrag;
+  pDeltaY *= pDrag;
+  pTop = [playerX+pDeltaX+pWidth/2, playerY+pDeltaY];
+  pLeft = [playerX+pDeltaX, playerY+pDeltaY+pHeight/2];
+  pRight = [playerX+pDeltaX+pWidth, playerY+pDeltaY+pHeight/2];
+  pBottom = [playerX+pDeltaX+pWidth/2, playerY+pDeltaY+pHeight];
+  pOverlaps = [overlaps(pTop), overlaps(pBottom), overlaps(pLeft), overlaps(pRight)];
+
+  if(pOverlaps[LEFT])pDeltaX = 0;
+  if(pOverlaps[RIGHT])pDeltaX = 0;
+  if(pOverlaps[TOP])pDeltaY = 0;
+  if(pOverlaps[BOTTOM])pDeltaY = 0;
+
+  playerX += pDeltaX;
+  playerY += pDeltaY;
+
+  pHit = pOverlaps.find(function(value){return value > 0});
+  //console.log(pOverlaps);
+  pColor = pHit ? 12 : 4;
+
+
+
+
 }
 
 function buttonPressed(b) {
